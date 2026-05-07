@@ -79,7 +79,7 @@ export default function InstallApp() {
       <button
         onClick={handleClick}
         aria-label="App installieren"
-        className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 transition hover:bg-white/10 active:bg-white/15"
+        className="flex items-center gap-1.5 rounded-full border border-[#c4b5fd]/25 bg-[#c4b5fd]/[0.06] px-3 py-1.5 text-xs font-medium text-[#c4b5fd]/90 transition hover:bg-[#c4b5fd]/[0.12] active:bg-[#c4b5fd]/15"
       >
         <DownloadIcon className="h-3.5 w-3.5" />
         <span>App installieren</span>
@@ -102,24 +102,24 @@ function InstallModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 backdrop-blur-sm sm:items-center"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111a2e] p-5 shadow-2xl"
+        className="w-full max-w-md rounded-3xl border border-white/8 bg-[#15152e]/95 p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-start justify-between">
+        <div className="mb-5 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold">App installieren</h2>
-            <p className="mt-0.5 text-xs text-white/60">
+            <h2 className="serif text-xl text-[#ede9d8]">App installieren</h2>
+            <p className="mt-1 text-xs italic text-[#c4b5fd]/65">
               Schneller Zugriff direkt vom Startbildschirm.
             </p>
           </div>
           <button
             onClick={onClose}
             aria-label="Schließen"
-            className="rounded-full p-1 text-white/60 hover:bg-white/10"
+            className="rounded-full p-1 text-[#ede9d8]/50 hover:bg-white/8 hover:text-[#ede9d8]/80"
           >
             <CloseIcon className="h-5 w-5" />
           </button>
@@ -135,7 +135,7 @@ function InstallModal({
 
         <button
           onClick={onClose}
-          className="mt-5 w-full rounded-xl bg-violet-500 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-600"
+          className="mt-6 w-full rounded-full bg-gradient-to-b from-[#a78bfa]/95 to-[#8b5cf6]/95 py-3 text-sm font-medium tracking-wide text-white shadow-[0_4px_24px_-6px_rgba(167,139,250,0.5)] transition hover:from-[#a78bfa] hover:to-[#8b5cf6]"
         >
           Verstanden
         </button>
@@ -158,10 +158,10 @@ function Tag({ active, label }: { active: boolean; label: string }) {
   return (
     <span
       className={
-        "rounded-full px-2.5 py-1 text-[11px] " +
+        "rounded-full px-2.5 py-1 text-[11px] tracking-wide " +
         (active
-          ? "bg-violet-500/20 text-violet-200 ring-1 ring-violet-400/40"
-          : "bg-white/5 text-white/40")
+          ? "bg-[#c4b5fd]/15 text-[#c4b5fd] ring-1 ring-[#c4b5fd]/40"
+          : "bg-white/[0.04] text-[#ede9d8]/35")
       }
     >
       {label}
@@ -172,10 +172,12 @@ function Tag({ active, label }: { active: boolean; label: string }) {
 function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <div className="flex gap-3">
-      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-xs font-semibold text-violet-200 ring-1 ring-violet-400/30">
+      <div className="serif flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#c4b5fd]/15 text-sm text-[#c4b5fd] ring-1 ring-[#c4b5fd]/25">
         {n}
       </div>
-      <div className="text-sm leading-relaxed text-white/80">{children}</div>
+      <div className="pt-0.5 text-sm leading-relaxed text-[#ede9d8]/85">
+        {children}
+      </div>
     </div>
   );
 }

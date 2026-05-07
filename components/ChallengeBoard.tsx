@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { supabase, type Participant, type LogRow } from "@/lib/supabase";
 import { buildDays, todayInBerlin } from "@/lib/challenge-config";
 import InstallApp from "@/components/InstallApp";
@@ -40,7 +40,6 @@ export default function ChallengeBoard({
     const checked = isChecked(pid, date);
     setBusyKey(key);
 
-    // Optimistic update
     if (checked) {
       setLogs((prev) =>
         prev.filter((l) => !(l.participant_id === pid && l.date === date)),
@@ -68,7 +67,6 @@ export default function ChallengeBoard({
     });
   }
 
-  // Per-participant total
   const totalsByParticipant = useMemo(() => {
     const m = new Map<number, number>();
     for (const l of logs) m.set(l.participant_id, (m.get(l.participant_id) ?? 0) + 1);
@@ -78,57 +76,83 @@ export default function ChallengeBoard({
   const totalDays = days.length;
 
   return (
-    <main className="mx-auto max-w-5xl px-3 py-4 pb-24 sm:px-4 sm:py-6">
+    <main className="relative z-10 mx-auto max-w-5xl px-4 py-5 pb-24 sm:px-6 sm:py-8">
       <Header />
 
       <Tabs view={view} onChange={setView} />
 
-      {view === "heute" ? (
-        <HeuteView
-          participants={participants}
-          today={today}
-          todayInChallenge={todayInChallenge}
-          isChecked={isChecked}
-          toggle={toggle}
-          busyKey={busyKey}
-          totalsByParticipant={totalsByParticipant}
-          totalDays={totalDays}
-        />
-      ) : (
-        <UebersichtView
-          participants={participants}
-          days={days}
-          today={today}
-          isChecked={isChecked}
-          toggle={toggle}
-          busyKey={busyKey}
-          totalsByParticipant={totalsByParticipant}
-        />
-      )}
+      <div className="breathe-in">
+        {view === "heute" ? (
+          <HeuteView
+            participants={participants}
+            today={today}
+            todayInChallenge={todayInChallenge}
+            isChecked={isChecked}
+            toggle={toggle}
+            busyKey={busyKey}
+            totalsByParticipant={totalsByParticipant}
+            totalDays={totalDays}
+          />
+        ) : (
+          <UebersichtView
+            participants={participants}
+            days={days}
+            today={today}
+            isChecked={isChecked}
+            toggle={toggle}
+            busyKey={busyKey}
+            totalsByParticipant={totalsByParticipant}
+          />
+        )}
+      </div>
 
       {pending ? (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/5 px-3 py-1.5 text-xs text-white/70 backdrop-blur">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-[#15152e]/90 px-4 py-1.5 text-xs text-[#ede9d8]/70 shadow-lg backdrop-blur">
           Speichere…
         </div>
       ) : null}
+
+      <Footer />
     </main>
+  );
+}
+
+function MoonIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className={className}>
+      <defs>
+        <radialGradient id="moonG" cx="40%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#fef9e7" />
+          <stop offset="60%" stopColor="#fcd34d" />
+          <stop offset="100%" stopColor="#d97706" />
+        </radialGradient>
+      </defs>
+      <circle cx="28" cy="32" r="20" fill="url(#moonG)" />
+      <circle cx="36" cy="29" r="19" fill="#0a0a1f" />
+      <circle cx="50" cy="14" r="1.2" fill="#fef3c7" opacity="0.85" />
+      <circle cx="14" cy="18" r="0.9" fill="#fef3c7" opacity="0.6" />
+      <circle cx="54" cy="48" r="0.8" fill="#fef3c7" opacity="0.6" />
+    </svg>
   );
 }
 
 function Header() {
   return (
-    <header className="mb-5">
+    <header className="mb-7 sm:mb-9">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-3xl">
-            Mind Detox Challenge
-          </h1>
-          <p className="mt-0.5 text-xs text-white/60 sm:text-sm">
-            Tägliche Meditation — gemeinsam dranbleiben.
-          </p>
+        <div className="flex items-start gap-3">
+          <MoonIcon className="mt-1 h-9 w-9 shrink-0 sm:h-11 sm:w-11" />
+          <div>
+            <h1 className="serif text-2xl font-medium tracking-tight text-[#ede9d8] sm:text-4xl">
+              Mind Detox Challenge
+            </h1>
+            <p className="mt-1 text-xs italic text-[#c4b5fd]/70 sm:text-sm">
+              Tägliche Meditation — gemeinsam dranbleiben.
+            </p>
+          </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/70">
+          <span className="rounded-full border border-[#fcd34d]/30 bg-[#fcd34d]/[0.06] px-3 py-1 text-[11px] tracking-wide text-[#fcd34d]/90">
             Mai 2026
           </span>
           <InstallApp />
@@ -140,7 +164,7 @@ function Header() {
 
 function Tabs({ view, onChange }: { view: View; onChange: (v: View) => void }) {
   return (
-    <div className="mb-5 flex w-full rounded-xl bg-white/5 p-1 sm:w-auto sm:inline-flex">
+    <div className="mb-6 flex w-full rounded-full border border-white/5 bg-white/[0.03] p-1 backdrop-blur sm:w-auto sm:inline-flex">
       <TabButton active={view === "heute"} onClick={() => onChange("heute")}>
         Heute
       </TabButton>
@@ -167,10 +191,10 @@ function TabButton({
     <button
       onClick={onClick}
       className={
-        "flex-1 rounded-lg px-4 py-2 text-sm transition sm:flex-none " +
+        "flex-1 rounded-full px-5 py-2 text-sm tracking-wide transition sm:flex-none " +
         (active
-          ? "bg-violet-500 text-white shadow"
-          : "text-white/70 hover:text-white")
+          ? "bg-gradient-to-b from-violet-400/90 to-violet-500/90 text-white shadow-[0_4px_20px_-6px_rgba(167,139,250,0.6)]"
+          : "text-[#ede9d8]/55 hover:text-[#ede9d8]/85")
       }
     >
       {children}
@@ -202,25 +226,42 @@ function HeuteView({
 
   if (!todayInChallenge) {
     return (
-      <section className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-        <p className="text-lg">Heute ist kein Challenge-Tag.</p>
-        <p className="mt-1 text-sm text-white/60">
+      <section className="rounded-3xl border border-white/8 bg-white/[0.03] p-8 text-center backdrop-blur">
+        <p className="serif text-xl text-[#ede9d8]">Heute ist kein Challenge-Tag.</p>
+        <p className="mt-2 text-sm text-[#ede9d8]/55">
           ({todayLabel}) — Wechsle zur Übersicht, um andere Tage zu pflegen.
         </p>
       </section>
     );
   }
 
+  const progress = participants.length > 0 ? (checkedCount / participants.length) * 100 : 0;
+
   return (
     <section>
-      <div className="mb-4 flex items-baseline justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-white/50">Heute</p>
-          <p className="text-lg font-semibold">{todayLabel}</p>
+      <div className="mb-5 rounded-3xl border border-white/8 bg-white/[0.03] p-5 backdrop-blur">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#c4b5fd]/60">
+              Heute
+            </p>
+            <p className="serif mt-1 text-xl text-[#ede9d8] sm:text-2xl">
+              {todayLabel}
+            </p>
+          </div>
+          <p className="text-right text-xs text-[#ede9d8]/60">
+            <span className="serif text-2xl text-[#ede9d8]">{checkedCount}</span>
+            <span className="text-[#ede9d8]/40"> / {participants.length}</span>
+            <br />
+            meditiert
+          </p>
         </div>
-        <p className="text-sm text-white/70">
-          {checkedCount} / {participants.length} meditiert
-        </p>
+        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/5">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[#a78bfa] via-[#86c099] to-[#fcd34d] transition-all duration-700"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
 
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -234,27 +275,30 @@ function HeuteView({
                 onClick={() => toggle(p.id, today)}
                 disabled={busyKey === key}
                 className={
-                  "flex w-full items-center justify-between rounded-xl border px-4 py-3 transition " +
+                  "flex w-full items-center justify-between rounded-2xl border px-4 py-3 transition backdrop-blur " +
                   (checked
-                    ? "border-emerald-400/40 bg-emerald-400/10"
-                    : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]")
+                    ? "border-[#86c099]/30 bg-[#86c099]/[0.08] shadow-[0_2px_20px_-12px_rgba(134,192,153,0.6)]"
+                    : "border-white/8 bg-white/[0.025] hover:border-white/15 hover:bg-white/[0.05]")
                 }
               >
                 <span className="flex items-center gap-3">
                   <span
                     className={
-                      "flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold " +
+                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm transition " +
                       (checked
-                        ? "bg-emerald-400 text-emerald-950"
-                        : "border border-white/20 text-white/40")
+                        ? "bg-[#86c099] text-[#0a2014] shadow-[0_0_18px_-2px_rgba(134,192,153,0.7)]"
+                        : "border border-white/15 text-[#ede9d8]/30")
                     }
                   >
                     {checked ? "✓" : ""}
                   </span>
-                  <span className="font-medium">{p.name}</span>
+                  <span className="text-[15px] font-medium text-[#ede9d8]/95">
+                    {p.name}
+                  </span>
                 </span>
-                <span className="text-xs text-white/50">
-                  {total}/{totalDays} Tage
+                <span className="shrink-0 text-[11px] tracking-wide text-[#ede9d8]/40">
+                  {total}
+                  <span className="text-[#ede9d8]/25">/{totalDays}</span>
                 </span>
               </button>
             </li>
@@ -282,11 +326,29 @@ function UebersichtView({
   busyKey: string | null;
   totalsByParticipant: Map<number, number>;
 }) {
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const topRef = useRef<HTMLDivElement | null>(null);
+  const tableRef = useRef<HTMLDivElement | null>(null);
   const todayThRef = useRef<HTMLTableCellElement | null>(null);
+  const [innerWidth, setInnerWidth] = useState(0);
+  const isSyncing = useRef(false);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const table = tableRef.current?.querySelector("table");
+      if (table) setInnerWidth(table.scrollWidth);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (tableRef.current) ro.observe(tableRef.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [participants.length, days.length]);
 
   useEffect(() => {
-    const container = scrollRef.current;
+    const container = tableRef.current;
     const target = todayThRef.current;
     if (!container || !target) return;
     const cellLeft = target.offsetLeft;
@@ -294,87 +356,135 @@ function UebersichtView({
     container.scrollLeft = Math.max(0, cellLeft - sidebar - 40);
   }, []);
 
+  const onTopScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    if (tableRef.current) tableRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    requestAnimationFrame(() => {
+      isSyncing.current = false;
+    });
+  };
+
+  const onTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    if (topRef.current) topRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    requestAnimationFrame(() => {
+      isSyncing.current = false;
+    });
+  };
+
+  const surfaceBg = "bg-[#0d0d24]/80";
+
   return (
-    <section
-      ref={scrollRef}
-      className="overflow-x-auto overflow-y-visible rounded-2xl border border-white/10 bg-white/[0.02]"
-    >
-      <table className="min-w-full border-collapse text-sm">
-        <thead className="sticky top-0 z-10 bg-[#0b1120]/95 backdrop-blur">
-          <tr>
-            <th className="sticky left-0 z-20 min-w-[110px] bg-[#0b1120]/95 px-2 py-2 text-left text-xs font-medium text-white/60 sm:min-w-[140px] sm:px-3 sm:text-sm">
-              Teilnehmer
-            </th>
-            {days.map((d) => (
+    <section className="overflow-hidden rounded-3xl border border-white/8 bg-white/[0.02] backdrop-blur">
+      {/* Top scrollbar (mirrors the table) */}
+      <div
+        ref={topRef}
+        onScroll={onTopScroll}
+        className="soft-scroll overflow-x-auto"
+        aria-hidden="true"
+      >
+        <div style={{ width: `${innerWidth}px`, height: "1px" }} />
+      </div>
+
+      {/* Main table */}
+      <div ref={tableRef} onScroll={onTableScroll} className="soft-scroll overflow-x-auto">
+        <table className="min-w-full border-collapse text-sm">
+          <thead className={`sticky top-0 z-10 ${surfaceBg} backdrop-blur`}>
+            <tr>
               <th
-                key={d.iso}
-                ref={d.iso === today ? todayThRef : undefined}
-                className={
-                  "px-0.5 py-2 text-center text-xs font-medium " +
-                  (d.iso === today ? "text-violet-300" : "text-white/50")
-                }
-                title={`${d.weekday} ${d.day}.${d.isWorkshop ? " Workshop" : ""}`}
+                className={`sticky left-0 z-20 min-w-[110px] ${surfaceBg} px-2 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-[#c4b5fd]/60 sm:min-w-[150px] sm:px-4 sm:text-xs`}
               >
-                <div className="leading-tight">{d.day}</div>
-                <div className="text-[10px] uppercase opacity-60">
-                  {d.weekday}
-                </div>
-                {d.isWorkshop ? (
-                  <div className="text-[9px] uppercase tracking-wider text-amber-300">
-                    WS
-                  </div>
-                ) : null}
+                Teilnehmer
               </th>
-            ))}
-            <th className="px-2 py-2 text-right text-xs font-medium text-white/60 sm:px-3">
-              Σ
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {participants.map((p) => {
-            const total = totalsByParticipant.get(p.id) ?? 0;
-            return (
-              <tr key={p.id} className="border-t border-white/5">
+              {days.map((d) => (
                 <th
-                  scope="row"
-                  className="sticky left-0 z-10 bg-[#0b1120]/95 px-2 py-1 text-left text-xs font-normal text-white/90 sm:px-3 sm:py-1.5 sm:text-sm"
+                  key={d.iso}
+                  ref={d.iso === today ? todayThRef : undefined}
+                  className={
+                    "px-0.5 py-2 text-center text-xs font-medium " +
+                    (d.iso === today
+                      ? "text-[#a78bfa]"
+                      : "text-[#ede9d8]/50")
+                  }
+                  title={`${d.weekday} ${d.day}.${d.isWorkshop ? " Workshop" : ""}`}
                 >
-                  {p.name}
+                  <div className="serif text-base leading-tight text-[#ede9d8]/90">
+                    {d.day}
+                  </div>
+                  <div className="text-[10px] uppercase opacity-60">
+                    {d.weekday}
+                  </div>
+                  {d.isWorkshop ? (
+                    <div className="text-[9px] uppercase tracking-wider text-[#fcd34d]/85">
+                      WS
+                    </div>
+                  ) : null}
                 </th>
-                {days.map((d) => {
-                  const checked = isChecked(p.id, d.iso);
-                  const key = `${p.id}|${d.iso}`;
-                  const isToday = d.iso === today;
-                  return (
-                    <td key={d.iso} className="p-0 text-center">
-                      <button
-                        onClick={() => toggle(p.id, d.iso)}
-                        disabled={busyKey === key}
-                        className={
-                          "m-0.5 h-9 w-9 rounded-md text-base transition sm:h-7 sm:w-7 sm:text-sm " +
-                          (checked
-                            ? "bg-emerald-400 text-emerald-950"
-                            : isToday
-                              ? "bg-violet-500/20 ring-1 ring-violet-400/50 hover:bg-violet-500/30"
-                              : "bg-white/[0.04] hover:bg-white/10")
-                        }
-                        aria-label={`${p.name} ${d.iso}`}
-                      >
-                        {checked ? "✓" : ""}
-                      </button>
-                    </td>
-                  );
-                })}
-                <td className="px-2 py-1 text-right text-xs text-white/60 sm:px-3 sm:py-1.5">
-                  {total}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+              ))}
+              <th
+                className={`px-2 py-3 text-right text-[11px] font-medium uppercase tracking-wider text-[#c4b5fd]/60 sm:px-3`}
+              >
+                Σ
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {participants.map((p) => {
+              const total = totalsByParticipant.get(p.id) ?? 0;
+              return (
+                <tr key={p.id} className="border-t border-white/5">
+                  <th
+                    scope="row"
+                    className={`sticky left-0 z-10 ${surfaceBg} px-2 py-1 text-left text-xs font-normal text-[#ede9d8]/90 sm:px-4 sm:py-1.5 sm:text-sm`}
+                  >
+                    {p.name}
+                  </th>
+                  {days.map((d) => {
+                    const checked = isChecked(p.id, d.iso);
+                    const key = `${p.id}|${d.iso}`;
+                    const isToday = d.iso === today;
+                    return (
+                      <td key={d.iso} className="p-0 text-center">
+                        <button
+                          onClick={() => toggle(p.id, d.iso)}
+                          disabled={busyKey === key}
+                          className={
+                            "m-0.5 h-9 w-9 rounded-lg text-base transition sm:h-7 sm:w-7 sm:text-sm " +
+                            (checked
+                              ? "bg-[#86c099] text-[#0a2014] shadow-[0_0_14px_-3px_rgba(134,192,153,0.7)]"
+                              : isToday
+                                ? "bg-[#a78bfa]/20 ring-1 ring-[#a78bfa]/50 hover:bg-[#a78bfa]/30"
+                                : "bg-white/[0.04] hover:bg-white/10")
+                          }
+                          aria-label={`${p.name} ${d.iso}`}
+                        >
+                          {checked ? "✓" : ""}
+                        </button>
+                      </td>
+                    );
+                  })}
+                  <td className="px-2 py-1 text-right text-xs text-[#ede9d8]/50 sm:px-3 sm:py-1.5">
+                    {total}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mt-10 text-center">
+      <p className="serif text-xs italic tracking-wide text-[#ede9d8]/30">
+        ein Atemzug nach dem anderen
+      </p>
+    </footer>
   );
 }
 
