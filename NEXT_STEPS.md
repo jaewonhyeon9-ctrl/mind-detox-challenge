@@ -24,7 +24,9 @@
 1. https://supabase.com/dashboard/project/pwnegioardhvvkxttjsx 접속
 2. SQL Editor 열기 (왼쪽 사이드바)
 3. `supabase/migration-001-init.sql` 파일 내용 전체 복사 → 붙여넣기 → **Run**
-4. 두 테이블 `mdc_participants`, `mdc_logs` 생성 확인
+4. **[2026-05-08 추가]** `supabase/migration-002-participant-crud.sql` 도 같은 방식으로 실행
+   (참가자 추가/수정/삭제 기능을 위한 RLS 정책)
+5. 두 테이블 `mdc_participants`, `mdc_logs` 생성 확인
 
 ### 2. 시드 (참가자 + 기존 체크 데이터 입력)
 ```powershell

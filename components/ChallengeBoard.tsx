@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } 
 import { supabase, type Participant, type LogRow } from "@/lib/supabase";
 import { buildDays, todayInBerlin } from "@/lib/challenge-config";
 import InstallApp from "@/components/InstallApp";
+import ManageParticipants from "@/components/ManageParticipants";
 
 type View = "heute" | "uebersicht";
 
@@ -14,8 +15,12 @@ export default function ChallengeBoard({
   initialParticipants: Participant[];
   initialLogs: LogRow[];
 }) {
-  const [participants] = useState(initialParticipants);
+  const [participants, setParticipants] = useState(initialParticipants);
   const [logs, setLogs] = useState(initialLogs);
+
+  const removeLogsForParticipant = (participantId: number) => {
+    setLogs((prev) => prev.filter((l) => l.participant_id !== participantId));
+  };
   const [view, setView] = useState<View>("heute");
   const [pending, startTransition] = useTransition();
   const [busyKey, setBusyKey] = useState<string | null>(null);
@@ -77,7 +82,11 @@ export default function ChallengeBoard({
 
   return (
     <main className="relative z-10 mx-auto max-w-5xl px-4 py-5 pb-24 sm:px-6 sm:py-8">
-      <Header />
+      <Header
+        participants={participants}
+        setParticipants={setParticipants}
+        onLogsRemoved={removeLogsForParticipant}
+      />
 
       <Tabs view={view} onChange={setView} />
 
@@ -136,7 +145,15 @@ function MoonIcon({ className }: { className?: string }) {
   );
 }
 
-function Header() {
+function Header({
+  participants,
+  setParticipants,
+  onLogsRemoved,
+}: {
+  participants: Participant[];
+  setParticipants: React.Dispatch<React.SetStateAction<Participant[]>>;
+  onLogsRemoved: (participantId: number) => void;
+}) {
   return (
     <header className="mb-7 sm:mb-9">
       <div className="flex items-start justify-between gap-3">
@@ -155,6 +172,11 @@ function Header() {
           <span className="rounded-full border border-[#fcd34d]/30 bg-[#fcd34d]/[0.06] px-3 py-1 text-[11px] tracking-wide text-[#fcd34d]/90">
             Mai 2026
           </span>
+          <ManageParticipants
+            participants={participants}
+            setParticipants={setParticipants}
+            onLogsRemoved={onLogsRemoved}
+          />
           <InstallApp />
         </div>
       </div>
