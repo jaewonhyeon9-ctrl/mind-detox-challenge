@@ -388,8 +388,12 @@ function UebersichtView({
         <div style={{ width: `${innerWidth}px`, height: "1px" }} />
       </div>
 
-      {/* Main table */}
-      <div ref={tableRef} onScroll={onTableScroll} className="soft-scroll overflow-x-auto">
+      {/* Main table — own vertical scroll so the thead row (date headers) can stick */}
+      <div
+        ref={tableRef}
+        onScroll={onTableScroll}
+        className="soft-scroll max-h-[calc(100dvh-200px)] overflow-auto"
+      >
         <table className="min-w-full border-collapse text-sm">
           <thead className={`sticky top-0 z-10 ${surfaceBg} backdrop-blur`}>
             <tr>
