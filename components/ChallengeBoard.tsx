@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { supabase, type Participant, type LogRow } from "@/lib/supabase";
-import { buildDays, todayInBerlin, CHALLENGE } from "@/lib/challenge-config";
+import { buildDays, todayInBerlin } from "@/lib/challenge-config";
+import InstallApp from "@/components/InstallApp";
 
 type View = "heute" | "uebersicht";
 
@@ -77,7 +78,7 @@ export default function ChallengeBoard({
   const totalDays = days.length;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 pb-24">
+    <main className="mx-auto max-w-5xl px-3 py-4 pb-24 sm:px-4 sm:py-6">
       <Header />
 
       <Tabs view={view} onChange={setView} />
@@ -116,25 +117,30 @@ export default function ChallengeBoard({
 
 function Header() {
   return (
-    <header className="mb-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Mind Detox Challenge
-        </h1>
-        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/70">
-          Mai 2026
-        </span>
+    <header className="mb-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight sm:text-3xl">
+            Mind Detox Challenge
+          </h1>
+          <p className="mt-0.5 text-xs text-white/60 sm:text-sm">
+            Tägliche Meditation — gemeinsam dranbleiben.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/70">
+            Mai 2026
+          </span>
+          <InstallApp />
+        </div>
       </div>
-      <p className="mt-1 text-sm text-white/60">
-        Tägliche Meditation — gemeinsam dranbleiben.
-      </p>
     </header>
   );
 }
 
 function Tabs({ view, onChange }: { view: View; onChange: (v: View) => void }) {
   return (
-    <div className="mb-5 inline-flex rounded-xl bg-white/5 p-1">
+    <div className="mb-5 flex w-full rounded-xl bg-white/5 p-1 sm:w-auto sm:inline-flex">
       <TabButton active={view === "heute"} onClick={() => onChange("heute")}>
         Heute
       </TabButton>
@@ -161,7 +167,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={
-        "rounded-lg px-4 py-1.5 text-sm transition " +
+        "flex-1 rounded-lg px-4 py-2 text-sm transition sm:flex-none " +
         (active
           ? "bg-violet-500 text-white shadow"
           : "text-white/70 hover:text-white")
@@ -276,24 +282,40 @@ function UebersichtView({
   busyKey: string | null;
   totalsByParticipant: Map<number, number>;
 }) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const todayThRef = useRef<HTMLTableCellElement | null>(null);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    const target = todayThRef.current;
+    if (!container || !target) return;
+    const cellLeft = target.offsetLeft;
+    const sidebar = 110;
+    container.scrollLeft = Math.max(0, cellLeft - sidebar - 40);
+  }, []);
+
   return (
-    <section className="overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.02]">
+    <section
+      ref={scrollRef}
+      className="overflow-x-auto overflow-y-visible rounded-2xl border border-white/10 bg-white/[0.02]"
+    >
       <table className="min-w-full border-collapse text-sm">
         <thead className="sticky top-0 z-10 bg-[#0b1120]/95 backdrop-blur">
           <tr>
-            <th className="sticky left-0 z-20 min-w-[140px] bg-[#0b1120]/95 px-3 py-2 text-left font-medium text-white/60">
+            <th className="sticky left-0 z-20 min-w-[110px] bg-[#0b1120]/95 px-2 py-2 text-left text-xs font-medium text-white/60 sm:min-w-[140px] sm:px-3 sm:text-sm">
               Teilnehmer
             </th>
             {days.map((d) => (
               <th
                 key={d.iso}
+                ref={d.iso === today ? todayThRef : undefined}
                 className={
-                  "px-1 py-2 text-center text-xs font-medium " +
+                  "px-0.5 py-2 text-center text-xs font-medium " +
                   (d.iso === today ? "text-violet-300" : "text-white/50")
                 }
                 title={`${d.weekday} ${d.day}.${d.isWorkshop ? " Workshop" : ""}`}
               >
-                <div>{d.day}</div>
+                <div className="leading-tight">{d.day}</div>
                 <div className="text-[10px] uppercase opacity-60">
                   {d.weekday}
                 </div>
@@ -304,7 +326,7 @@ function UebersichtView({
                 ) : null}
               </th>
             ))}
-            <th className="px-3 py-2 text-right text-xs font-medium text-white/60">
+            <th className="px-2 py-2 text-right text-xs font-medium text-white/60 sm:px-3">
               Σ
             </th>
           </tr>
@@ -316,7 +338,7 @@ function UebersichtView({
               <tr key={p.id} className="border-t border-white/5">
                 <th
                   scope="row"
-                  className="sticky left-0 z-10 bg-[#0b1120]/95 px-3 py-1.5 text-left font-normal text-white/90"
+                  className="sticky left-0 z-10 bg-[#0b1120]/95 px-2 py-1 text-left text-xs font-normal text-white/90 sm:px-3 sm:py-1.5 sm:text-sm"
                 >
                   {p.name}
                 </th>
@@ -330,7 +352,7 @@ function UebersichtView({
                         onClick={() => toggle(p.id, d.iso)}
                         disabled={busyKey === key}
                         className={
-                          "m-0.5 h-7 w-7 rounded-md transition " +
+                          "m-0.5 h-9 w-9 rounded-md text-base transition sm:h-7 sm:w-7 sm:text-sm " +
                           (checked
                             ? "bg-emerald-400 text-emerald-950"
                             : isToday
@@ -344,7 +366,7 @@ function UebersichtView({
                     </td>
                   );
                 })}
-                <td className="px-3 py-1.5 text-right text-xs text-white/60">
+                <td className="px-2 py-1 text-right text-xs text-white/60 sm:px-3 sm:py-1.5">
                   {total}
                 </td>
               </tr>
