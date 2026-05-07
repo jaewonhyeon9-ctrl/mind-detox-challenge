@@ -5,6 +5,7 @@ import { supabase, type Participant, type LogRow } from "@/lib/supabase";
 import { buildDays, todayInBerlin } from "@/lib/challenge-config";
 import InstallApp from "@/components/InstallApp";
 import ManageParticipants from "@/components/ManageParticipants";
+import Tutorial from "@/components/Tutorial";
 
 type View = "heute" | "uebersicht";
 
@@ -506,10 +507,11 @@ function UebersichtView({
 
 function Footer() {
   return (
-    <footer className="mt-10 text-center">
+    <footer className="mt-10 flex flex-col items-center gap-3 text-center">
       <p className="serif text-xs italic tracking-wide text-[#ede9d8]/30">
         ein Atemzug nach dem anderen
       </p>
+      <Tutorial />
     </footer>
   );
 }
